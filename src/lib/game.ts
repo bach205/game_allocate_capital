@@ -1,7 +1,7 @@
 import { supabase, requireSupabaseConfig } from './supabase';
 import type { HistoryRow, Resource, RevealRow, Room, Selection, Team } from '../types';
 
-export const ROUND_SECONDS = 30;
+export const ROUND_SECONDS = 10;
 
 export const RESOURCES: Record<Resource, { label: string; shortLabel: string; points: number; accent: string }> = {
   gold: { label: 'Vàng', shortLabel: 'Vàng', points: 180, accent: '#f2b705' },
