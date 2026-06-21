@@ -101,6 +101,11 @@ function useCountdown(countdownEnd: string | null | undefined) {
   return seconds;
 }
 
+function isCountdownExpired(countdownEnd: string | null | undefined) {
+  if (!countdownEnd) return false;
+  return Date.now() >= new Date(countdownEnd).getTime();
+}
+
 function App() {
   const route = useRoute();
   const { isAdmin, login, logout } = useAdminAuth();
@@ -334,7 +339,7 @@ function AdminRoomPage({ roomId, navigate }: { roomId: string; navigate: (to: st
   }, [loadAll, roomId]);
 
   useEffect(() => {
-    if (!room || room.status !== 'playing' || seconds > 0) return;
+    if (!room || room.status !== 'playing' || !isCountdownExpired(room.countdown_end)) return;
     const key = `${room.id}-${room.current_round}-${room.countdown_end}`;
     if (revealGuard.current === key) return;
     revealGuard.current = key;
@@ -503,7 +508,7 @@ function TeamPage({ navigate }: { navigate: (to: string) => void }) {
   }, [loadFromTeam, room, team]);
 
   useEffect(() => {
-    if (!team || !room || room.status !== 'playing' || selection || seconds > 0) return;
+    if (!team || !room || room.status !== 'playing' || selection || !isCountdownExpired(room.countdown_end)) return;
     if (!isTeamEligibleForRound(team, room)) return;
     const key = `${team.id}-${room.current_round}-${room.countdown_end}`;
     if (defaultGuard.current === key) return;
