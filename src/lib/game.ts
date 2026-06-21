@@ -1,12 +1,12 @@
 import { supabase, requireSupabaseConfig } from './supabase';
 import type { HistoryRow, Resource, RevealRow, Room, Selection, Team } from '../types';
 
-export const ROUND_SECONDS = 10;
+export const ROUND_SECONDS = 15;
 
 export const RESOURCES: Record<Resource, { label: string; shortLabel: string; points: number; accent: string }> = {
-  gold: { label: 'Vàng', shortLabel: 'Vàng', points: 180, accent: '#f2b705' },
+  gold: { label: 'Vàng', shortLabel: 'Vàng', points: 210, accent: '#f2b705' },
   oil: { label: 'Dầu mỏ', shortLabel: 'Dầu', points: 320, accent: '#334155' },
-  labor: { label: 'Lao động', shortLabel: 'Lao động', points: 450, accent: '#0f9f6e' },
+  labor: { label: 'Lao động', shortLabel: 'Lao động', points: 400, accent: '#0f9f6e' },
 };
 
 export const RESOURCE_LIST = Object.entries(RESOURCES).map(([value, info]) => ({
