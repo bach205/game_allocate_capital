@@ -462,11 +462,12 @@ function TeamPage({ navigate }: { navigate: (to: string) => void }) {
     setLoading(true);
     setError('');
     const params = new URLSearchParams(window.location.search);
-    const urlToken = params.get('token');
-    const storedToken = localStorage.getItem('team_session');
-    const token = urlToken || storedToken;
+    const token = params.get('token');
 
     if (!token) {
+      setTeam(null);
+      setRoom(null);
+      setSelection(null);
       setLoading(false);
       return;
     }
@@ -475,11 +476,9 @@ function TeamPage({ navigate }: { navigate: (to: string) => void }) {
       const resolved = await resolveTeam(token);
       if (!resolved) {
         setError('Link không hợp lệ. Vui lòng join lại phòng.');
-        localStorage.removeItem('team_session');
         setTeam(null);
         setRoom(null);
       } else {
-        if (!urlToken) window.history.replaceState({}, '', `/play?token=${resolved.session_token}`);
         await loadFromTeam(resolved);
       }
     } catch (err) {

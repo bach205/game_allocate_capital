@@ -152,7 +152,6 @@ export async function joinRoom(teamName: string, roomCode: string) {
     .select()
     .single();
   handleError(error);
-  localStorage.setItem('team_session', token);
   return data as Team;
 }
 
@@ -164,7 +163,6 @@ export async function resolveTeam(token: string) {
     .maybeSingle();
   handleError(error);
   if (!data) return null;
-  localStorage.setItem('team_session', token);
   return data as Team;
 }
 
