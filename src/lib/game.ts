@@ -193,6 +193,18 @@ export async function startRound(room: Room, restart = false) {
   return data as Room;
 }
 
+export async function setDraftMode(room: Room, isDraft: boolean) {
+  requireSupabaseConfig();
+  const { data, error } = await supabase
+    .from('rooms')
+    .update({ is_draft: isDraft })
+    .eq('id', room.id)
+    .select()
+    .single();
+  handleError(error);
+  return data as Room;
+}
+
 export async function markRoomRevealing(room: Room) {
   if (room.status !== 'playing') return;
   const { error } = await supabase
@@ -255,9 +267,34 @@ export async function buildRevealRows(room: Room) {
 
 export async function finalizeReveal(room: Room) {
   requireSupabaseConfig();
+  if (room.is_draft) {
+    const roundToDiscard = room.current_round;
+    const { data: lockedRoom, error: lockError } = await supabase
+      .from('rooms')
+      .update({
+        status: 'waiting',
+        current_round: Math.max(0, room.current_round - 1),
+        countdown_end: null,
+      })
+      .eq('id', room.id)
+      .eq('status', 'revealing')
+      .select()
+      .maybeSingle();
+    handleError(lockError);
+    if (!lockedRoom) return;
+
+    const { error: deleteError } = await supabase
+      .from('selections')
+      .delete()
+      .eq('room_id', room.id)
+      .eq('round_number', roundToDiscard);
+    handleError(deleteError);
+    return;
+  }
+
   const { data: lockedRoom, error: lockError } = await supabase
     .from('rooms')
-    .update({ status: 'waiting' })
+    .update({ status: 'waiting', countdown_end: null })
     .eq('id', room.id)
     .eq('status', 'revealing')
     .select()

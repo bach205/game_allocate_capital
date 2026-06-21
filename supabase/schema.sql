@@ -7,6 +7,7 @@ create table if not exists public.rooms (
   current_round integer default 0,
   status text default 'waiting' check (status in ('waiting', 'playing', 'revealing')),
   countdown_end timestamptz,
+  is_draft boolean default false,
   created_at timestamptz default now()
 );
 

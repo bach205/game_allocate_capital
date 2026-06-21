@@ -5,6 +5,7 @@ import {
   Copy,
   Crown,
   DoorOpen,
+  FlaskConical,
   Loader2,
   LogOut,
   Play,
@@ -29,6 +30,7 @@ import {
   listAdminRooms,
   markRoomRevealing,
   resolveTeam,
+  setDraftMode,
   startRound,
   submitSelection,
 } from './lib/game';
@@ -283,7 +285,7 @@ function Dashboard({ navigate, onLogout }: { navigate: (to: string) => void; onL
           {rooms.map((room) => (
             <button className="room-tile" type="button" key={room.id} onClick={() => navigate(`/admin/rooms/${room.id}`)}>
               <span className="room-code">{room.code}</span>
-              <span className={`status-pill ${room.status}`}>{room.status}</span>
+              <span className={`status-pill ${room.status}`}>{room.is_draft ? 'draft' : room.status}</span>
               <span>Lượt {room.current_round}</span>
             </button>
           ))}
@@ -360,6 +362,20 @@ function AdminRoomPage({ roomId, navigate }: { roomId: string; navigate: (to: st
     }
   }
 
+  async function handleToggleDraft() {
+    if (!room) return;
+    setBusy(true);
+    setError('');
+    try {
+      await setDraftMode(room, !room.is_draft);
+      await loadAll();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Không bật/tắt được chế độ nháp.');
+    } finally {
+      setBusy(false);
+    }
+  }
+
   async function closeReveal() {
     if (!room) return;
     setBusy(true);
@@ -399,8 +415,19 @@ function AdminRoomPage({ roomId, navigate }: { roomId: string; navigate: (to: st
         <Stat icon={<Users size={20} />} label="Đội" value={`${teams.length}/4`} />
         <Stat icon={<BarChart3 size={20} />} label="Lượt" value={String(room.current_round)} />
         <Stat icon={<Clock3 size={20} />} label="Countdown" value={room.status === 'playing' ? `${seconds}s` : '--'} />
-        <span className={`status-pill ${room.status}`}>{room.status}</span>
+        <span className={`status-pill ${room.is_draft ? 'draft' : room.status}`}>
+          {room.is_draft ? 'draft' : room.status}
+        </span>
         <div className="actions">
+          <button
+            className={room.is_draft ? 'warning-action' : 'secondary-action'}
+            type="button"
+            onClick={handleToggleDraft}
+            disabled={busy || room.status !== 'waiting'}
+          >
+            <FlaskConical size={17} />
+            {room.is_draft ? 'Tắt nháp' : 'Bật nháp'}
+          </button>
           <button className="secondary-action" type="button" onClick={() => handleStart(true)} disabled={busy || room.current_round === 0}>
             <RefreshCw size={17} />
             Restart
@@ -429,7 +456,7 @@ function AdminRoomPage({ roomId, navigate }: { roomId: string; navigate: (to: st
       </section>
 
       {room.status === 'revealing' && (
-        <RevealModal rows={revealRows} onClose={closeReveal} busy={busy} round={room.current_round} />
+        <RevealModal rows={revealRows} onClose={closeReveal} busy={busy} round={room.current_round} isDraft={room.is_draft} />
       )}
     </Shell>
   );
@@ -554,6 +581,7 @@ function TeamPage({ navigate }: { navigate: (to: string) => void }) {
           <h1>{team.name}</h1>
           <p>
             Phòng <strong>{room.code}</strong> · Lượt {room.current_round || 0}
+            {room.is_draft ? ' · Nháp' : ''}
           </p>
         </div>
         <div className="score-badge">
@@ -568,7 +596,9 @@ function TeamPage({ navigate }: { navigate: (to: string) => void }) {
 
       <section className="play-surface">
         <div className="round-status">
-          <span className={`status-pill ${room.status}`}>{room.status}</span>
+          <span className={`status-pill ${room.is_draft ? 'draft' : room.status}`}>
+            {room.is_draft ? 'draft' : room.status}
+          </span>
           <strong>{room.status === 'playing' ? `${seconds}s` : 'Chờ admin'}</strong>
         </div>
 
@@ -661,7 +691,19 @@ function JoinScreen({ onJoined, initialError }: { onJoined: (team: Team) => Prom
   );
 }
 
-function RevealModal({ rows, round, busy, onClose }: { rows: RevealRow[]; round: number; busy: boolean; onClose: () => void }) {
+function RevealModal({
+  rows,
+  round,
+  busy,
+  isDraft,
+  onClose,
+}: {
+  rows: RevealRow[];
+  round: number;
+  busy: boolean;
+  isDraft: boolean;
+  onClose: () => void;
+}) {
   const eligibleRows = rows.filter((row) => row.eligible);
   const totals = useMemo(() => {
     return RESOURCE_LIST.map((resource) => ({
@@ -675,10 +717,11 @@ function RevealModal({ rows, round, busy, onClose }: { rows: RevealRow[]; round:
       <section className="modal">
         <header className="modal-header">
           <div>
-            <p className="eyebrow">Reveal</p>
+            <p className="eyebrow">{isDraft ? 'Reveal nháp' : 'Reveal'}</p>
             <h2>Kết quả lượt {round}</h2>
+            {isDraft && <p className="modal-note">Lượt nháp sẽ không tăng lượt, không cộng điểm và không lưu lịch sử.</p>}
           </div>
-          <button className="icon-action" type="button" onClick={onClose} disabled={busy} title="Đóng và tính điểm">
+          <button className="icon-action" type="button" onClick={onClose} disabled={busy} title={isDraft ? 'Đóng lượt nháp' : 'Đóng và tính điểm'}>
             {busy ? <Loader2 className="spin" size={18} /> : <X size={18} />}
           </button>
         </header>

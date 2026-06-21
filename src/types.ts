@@ -8,6 +8,7 @@ export type Room = {
   current_round: number;
   status: RoomStatus;
   countdown_end: string | null;
+  is_draft: boolean;
   created_at: string;
 };
 

@@ -230,6 +230,7 @@ code {
 
 .primary-action,
 .secondary-action,
+.warning-action,
 .icon-action,
 .link-button {
   display: inline-flex;
@@ -252,6 +253,13 @@ code {
   border: 1px solid #cfc7b8;
   background: #fffdfa;
   color: #273244;
+  padding: 0 14px;
+}
+
+.warning-action {
+  border: 1px solid #d97706;
+  background: #fffbeb;
+  color: #92400e;
   padding: 0 14px;
 }
 
@@ -367,6 +375,10 @@ code {
 
 .status-pill.revealing {
   background: #c2410c;
+}
+
+.status-pill.draft {
+  background: #d97706;
 }
 
 .room-grid,
@@ -543,6 +555,13 @@ th {
   justify-content: space-between;
   gap: 16px;
   margin-bottom: 16px;
+}
+
+.modal-note {
+  margin: 6px 0 0;
+  color: #92400e;
+  font-size: 0.92rem;
+  line-height: 1.45;
 }
 
 .resource-summary {
